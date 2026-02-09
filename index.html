@@ -120,12 +120,45 @@
         border-color: #ef4444;
         color: #ef4444;
       }
+
+      .style-btn {
+        background: #f1f5f9;
+        border: 1.5px solid #000;
+        margin-bottom: 5px;
+        padding: 5px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 11px;
+      }
+      .style-btn:hover {
+        background: #e2e8f0;
+      }
+      #plus-button:hover .size-popup {
+        display: flex;
+      }
     </style>
   </head>
   <body>
     <div id="navbar">
-      <div class="nav-item" onclick="addNewLine()" title="Add Line">
+      <div class="nav-item" title="Add Line" id="plus-button">
         <i class="fa-solid fa-plus"></i>
+        <div class="size-popup">
+          <div class="size-popup-content">
+            <label style="font-size: 10px; font-weight: 900; margin-bottom: 8px"
+              >CHOOSE STYLE</label
+            >
+            <button class="style-btn" onclick="addNewLine('straight')">
+              Straight
+            </button>
+            <button class="style-btn" onclick="addNewLine('step')">
+              Step/Elbow
+            </button>
+            <button class="style-btn" onclick="addNewLine('curved')">
+              Curved
+            </button>
+          </div>
+        </div>
       </div>
       <div
         class="nav-item"
@@ -142,7 +175,8 @@
         />
       </div>
       <div class="nav-item">
-        <select id="lineSelect" onchange="setActive(this.value)"></select>
+        <select id="lineSelect" onchange="setActive(this.value)">
+        </select>
       </div>
       <div class="nav-item">
         <div id="colorPreview" class="color-circle"></div>
@@ -166,7 +200,7 @@
               type="range"
               min="1"
               max="20"
-              value="5"
+              value="4"
               id="lineWidthInput"
               oninput="updateActiveLine(null, this.value)"
             />
@@ -453,17 +487,37 @@
         };
       }
 
-      function addNewLine() {
+      function addNewLine(type = "straight") {
         const id = Date.now();
-        lines.push({
+        const startX = 200,
+          startY = 300;
+        let newLine = {
           id,
           name: "L" + (lines.length + 1),
-          start: { x: 200, y: 200 },
-          end: { x: 400, y: 300 },
+          color: "#000000",
+          width: 4,
+          start: { x: startX, y: startY },
+          end: { x: startX + 384, y: startY },
           elbows: [],
-          color: "#6366f1",
-          width: 5,
-        });
+        };
+
+        // Mapping the Canva shapes to our internal Elbow points
+        if (type === "step") {
+          // This replicates the "Step" logic from your second SVG
+          newLine.end = { x: startX + 384, y: startY + 80 };
+          newLine.elbows = [
+            { x: startX + 192, y: startY }, // First pivot
+            { x: startX + 192, y: startY + 80 }, // Second pivot
+          ];
+        } else if (type === "curved") {
+          // This replicates the "Arc" logic from your third SVG
+          // We use one middle elbow point to force the curve upward
+          newLine.end = { x: startX + 384, y: startY };
+          newLine.elbows = [{ x: startX + 192, y: startY - 50 }];
+        }
+        // 'straight' remains default (no elbows)
+
+        lines.push(newLine);
         setActive(id);
       }
 
@@ -570,7 +624,6 @@
         };
         reader.readAsText(file);
       }
-      addNewLine();
     </script>
   </body>
 </html>
