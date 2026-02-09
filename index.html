@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Designer Pro - Slider Fix</title>
+    <title>Designer Pro - Direct Select</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -47,6 +47,32 @@
         box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
       }
 
+      /* New Sidebar List */
+      #lineListContainer {
+        max-height: 150px;
+        overflow-y: auto;
+        width: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        scrollbar-width: none;
+      }
+      .line-item {
+        font-size: 11px;
+        font-weight: 900;
+        padding: 5px;
+        border: 1.5px solid #333;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .line-item.active {
+        background: #ff9100;
+        color: white;
+        border-color: #000;
+      }
+
       .nav-item {
         width: 50px;
         height: 50px;
@@ -66,17 +92,6 @@
         transform: scale(1.05);
       }
 
-      #lineSelect {
-        width: 100%;
-        border: none;
-        font-weight: bold;
-        font-size: 14px;
-        background: transparent;
-        outline: none;
-        text-align: center;
-        cursor: pointer;
-        appearance: none;
-      }
       .color-circle {
         width: 28px;
         height: 28px;
@@ -91,16 +106,14 @@
         cursor: pointer;
       }
 
-      /* FIXED SLIDER CSS */
       .size-popup {
         position: absolute;
-        left: 55px; /* Moved closer to the nav-item */
-        padding-left: 20px; /* Transparent bridge to keep hover active */
+        left: 55px;
+        padding-left: 20px;
         display: none;
         flex-direction: column;
         z-index: 3000;
       }
-
       .size-popup-content {
         background: white;
         border: 2px solid #000;
@@ -108,17 +121,9 @@
         border-radius: 12px;
         width: 130px;
         box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
       }
-
       .nav-item:hover .size-popup {
         display: flex;
-      }
-
-      .btn-red {
-        border-color: #ef4444;
-        color: #ef4444;
       }
 
       .style-btn {
@@ -128,55 +133,38 @@
         padding: 5px;
         border-radius: 6px;
         cursor: pointer;
+        width: 100%;
         font-weight: bold;
         font-size: 11px;
       }
-      .style-btn:hover {
-        background: #e2e8f0;
-      }
-      #plus-button:hover .size-popup {
-        display: flex;
+      .btn-red {
+        border-color: #ef4444;
+        color: #ef4444;
       }
     </style>
   </head>
   <body>
     <div id="navbar">
-      <div class="nav-item" title="Add Line" id="plus-button">
+      <div class="nav-item" id="plus-button">
         <i class="fa-solid fa-plus"></i>
         <div class="size-popup">
           <div class="size-popup-content">
             <label style="font-size: 10px; font-weight: 900; margin-bottom: 8px"
-              >CHOOSE STYLE</label
+              >STYLE</label
             >
             <button class="style-btn" onclick="addNewLine('straight')">
               Straight
             </button>
-            <button class="style-btn" onclick="addNewLine('step')">
-              Step/Elbow
-            </button>
+            <button class="style-btn" onclick="addNewLine('step')">Step</button>
             <button class="style-btn" onclick="addNewLine('curved')">
               Curved
             </button>
           </div>
         </div>
       </div>
-      <div
-        class="nav-item"
-        onclick="document.getElementById('svgInput').click()"
-        title="Upload SVG"
-      >
-        <i class="fa-solid fa-upload"></i>
-        <input
-          type="file"
-          id="svgInput"
-          accept=".svg"
-          style="display: none"
-          onchange="restoreFromSVG(event)"
-        />
-      </div>
-      <div class="nav-item">
-        <select id="lineSelect" onchange="setActive(this.value)"></select>
-      </div>
+
+      <div id="lineListContainer"></div>
+
       <div class="nav-item">
         <div id="colorPreview" class="color-circle"></div>
         <input
@@ -193,7 +181,7 @@
         <div class="size-popup">
           <div class="size-popup-content">
             <label style="font-size: 10px; font-weight: 900; margin-bottom: 8px"
-              >LINE SIZE (1-20)</label
+              >SIZE</label
             >
             <input
               type="range"
@@ -207,19 +195,13 @@
         </div>
       </div>
 
-      <div class="nav-item" onclick="downloadSVG()" title="Download SVG">
-        <i class="fa-solid fa-download"></i>
-      </div>
-      <div
-        class="nav-item btn-red"
-        onclick="deleteActiveLine()"
-        title="Delete Active"
-      >
+       <div class="nav-item btn-red" onclick="deleteActiveLine()">
         <i class="fa-solid fa-xmark"></i>
       </div>
-      <div class="nav-item btn-red" onclick="deleteAll()" title="Clear Canvas">
-        <i class="fa-solid fa-trash-can"></i>
+      <div class="nav-item" onclick="downloadSVG()">
+      <i class="fa-solid fa-paper-plane"></i>
       </div>
+     
     </div>
 
     <div id="canvas-wrapper">
@@ -258,7 +240,8 @@
       let lines = [],
         activeId = null,
         dragging = null,
-        hoveredPoint = null;
+        hoveredPoint = null,
+        hoveredLineId = null;
 
       function resize() {
         canvas.width = window.innerWidth;
@@ -272,16 +255,28 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lines.forEach((line) => {
           const pts = [line.start, ...line.elbows, line.end];
+          const path = new Path2D(getPath(pts));
+
+          // STRICT HOVER/ACTIVE HIGHLIGHT
+          // Only shows highlight if mouse is actually over the line OR it's the active one
+          if (line.id === activeId || line.id === hoveredLineId) {
+            ctx.strokeStyle = "#FF9100";
+            ctx.lineWidth = line.width + 5;
+            ctx.lineCap = ctx.lineJoin = "round";
+            ctx.stroke(path);
+          }
+
           ctx.strokeStyle = line.color;
           ctx.lineWidth = line.width;
           ctx.lineCap = ctx.lineJoin = "round";
-          ctx.stroke(new Path2D(getPath(pts)));
+          ctx.stroke(path);
+
           if (line.id === activeId) {
             drawHandle(line.start, "#ffcc00", "+");
             drawHandle(line.end, "#ffcc00", "+");
             line.elbows.forEach((p, i) => {
-              const isHovered = hoveredPoint && hoveredPoint.idx === i;
-              drawHandle(p, "#ebebeb", GREEK[i % GREEK.length], isHovered);
+              const isPtHovered = hoveredPoint && hoveredPoint.idx === i;
+              drawHandle(p, "#ebebeb", GREEK[i % GREEK.length], isPtHovered);
             });
             const box = getBoundingBox(line);
             drawIcon(box.midX - 25, box.minY - 40, "move");
@@ -290,23 +285,61 @@
         });
       }
 
+      canvas.ondblclick = (e) => {
+        const x = e.clientX,
+          y = e.clientY;
+        const l = lines.find((l) => l.id === activeId);
+        if (!l) return;
+
+        const seq = [l.start, ...l.elbows, l.end];
+        let bestIdx = -1,
+          minDist = 20; // Tightened distance for better accuracy
+
+        for (let i = 0; i < seq.length - 1; i++) {
+          const d = pToSegDist(x, y, seq[i], seq[i + 1]);
+          if (d < minDist) {
+            minDist = d;
+            bestIdx = i;
+          }
+        }
+
+        if (bestIdx !== -1) {
+          // Insert new elbow point between the two closest points
+          l.elbows.splice(bestIdx, 0, { x, y });
+          render();
+        }
+      };
+
       function drawHandle(p, color, label, showCross) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
+
         ctx.fillStyle = "black";
-        ctx.font = "bold 14px Serif";
+        ctx.font = "bold 12px Sans";
         ctx.textAlign = "center";
         ctx.fillText(label, p.x, p.y + 4);
+
+        // Offset the delete cross away from the line (Top-Right)
         if (showCross) {
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 1;
+          const offsetX = 18;
+          const offsetY = -18;
+
+          // Draw a small red circle background for the delete button
           ctx.beginPath();
-          ctx.moveTo(p.x + 10, p.y + 10);
-          ctx.lineTo(p.x + 22, p.y + 22);
-          ctx.moveTo(p.x + 22, p.y + 10);
-          ctx.lineTo(p.x + 10, p.y + 22);
+          ctx.arc(p.x + offsetX, p.y + offsetY, 8, 0, Math.PI * 2);
+          ctx.fillStyle = "#ef4444";
+          ctx.fill();
+
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          // Small white 'x'
+          ctx.moveTo(p.x + offsetX - 4, p.y + offsetY - 4);
+          ctx.lineTo(p.x + offsetX + 4, p.y + offsetY + 4);
+          ctx.moveTo(p.x + offsetX + 4, p.y + offsetY - 4);
+          ctx.lineTo(p.x + offsetX - 4, p.y + offsetY + 4);
           ctx.stroke();
         }
       }
@@ -317,10 +350,8 @@
         ctx.arc(x, y, 16, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = "grey";
-        ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.fillStyle = "#000";
-        ctx.font = "16px Serif";
         ctx.textAlign = "center";
         ctx.fillText(type === "move" ? "✥" : "↻", x, y + 5);
       }
@@ -348,73 +379,63 @@
         };
       }
 
-      canvas.ondblclick = (e) => {
-        const l = lines.find((l) => l.id === activeId);
-        if (!l) return;
-        const x = e.clientX,
-          y = e.clientY;
-        const seq = [l.start, ...l.elbows, l.end];
-        let bestIdx = -1,
-          minDist = 30;
-        for (let i = 0; i < seq.length - 1; i++) {
-          const d = pToSegDist(x, y, seq[i], seq[i + 1]);
-          if (d < minDist) {
-            minDist = d;
-            bestIdx = i;
-          }
-        }
-        if (bestIdx !== -1) {
-          l.elbows.splice(bestIdx, 0, { x, y });
-          render();
-        }
-      };
-
+      // --- 3. Updated MouseDown to handle the Offset Delete Click ---
       canvas.onmousedown = (e) => {
         const x = e.clientX,
           y = e.clientY;
         const l = lines.find((l) => l.id === activeId);
-        if (!l) return;
-        if (hoveredPoint) {
+
+        if (l && hoveredPoint) {
           const p = l.elbows[hoveredPoint.idx];
-          if (x > p.x + 8 && y > p.y + 8) {
+          const distToDelete = Math.hypot(x - (p.x + 18), y - (p.y - 18));
+
+          // If clicking the specifically offset delete button
+          if (distToDelete < 12) {
             l.elbows.splice(hoveredPoint.idx, 1);
             hoveredPoint = null;
             render();
             return;
           }
         }
-        const box = getBoundingBox(l);
-        if (
-          Math.sqrt((x - (box.midX - 25)) ** 2 + (y - (box.minY - 40)) ** 2) <
-          18
-        ) {
-          dragging = { type: "line", line: l, lx: x, ly: y };
-          return;
+
+        // Continue with normal dragging/selection logic...
+        if (l) {
+          const pts = [l.start, l.end, ...l.elbows];
+          const p = pts.find((pt) => Math.hypot(x - pt.x, y - pt.y) < 15);
+          if (p) {
+            dragging = { type: "point", ref: p };
+            return;
+          }
+
+          const box = getBoundingBox(l);
+          if (Math.hypot(x - (box.midX - 25), y - (box.minY - 40)) < 18) {
+            dragging = { type: "line", line: l, lx: x, ly: y };
+            return;
+          }
+          if (Math.hypot(x - (box.midX + 25), y - (box.minY - 40)) < 18) {
+            const c = getCenter(l);
+            dragging = {
+              type: "rotate",
+              line: l,
+              center: c,
+              sa: Math.atan2(y - c.y, x - c.x),
+            };
+            return;
+          }
         }
-        if (
-          Math.sqrt((x - (box.midX + 25)) ** 2 + (y - (box.minY - 40)) ** 2) <
-          18
-        ) {
-          const c = getCenter(l);
-          dragging = {
-            type: "rotate",
-            line: l,
-            center: c,
-            sa: Math.atan2(y - c.y, x - c.x),
-          };
-          return;
+
+        if (hoveredLineId !== null) {
+          setActive(hoveredLineId);
         }
-        const pts = [l.start, l.end, ...l.elbows];
-        const p = pts.find(
-          (pt) => Math.sqrt((x - pt.x) ** 2 + (y - pt.y) ** 2) < 15,
-        );
-        if (p) dragging = { type: "point", ref: p };
       };
 
       window.onmousemove = (e) => {
         const x = e.clientX,
           y = e.clientY;
+        let cursorType = "default";
+
         if (dragging) {
+          cursorType = "grabbing"; // Hand closed while moving
           if (dragging.type === "point") {
             dragging.ref.x = x;
             dragging.ref.y = y;
@@ -450,34 +471,62 @@
           }
           render();
         } else {
-          const l = lines.find((l) => l.id === activeId);
-          if (l) {
-            let found = null;
-            l.elbows.forEach((p, i) => {
-              if (Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2) < 25)
-                found = { idx: i };
-            });
-            if (JSON.stringify(found) !== JSON.stringify(hoveredPoint)) {
-              hoveredPoint = found;
-              render();
+          // Check for Hover on Lines
+          let lineFound = null;
+          lines.forEach((l) => {
+            const pts = [l.start, ...l.elbows, l.end];
+            for (let i = 0; i < pts.length - 1; i++) {
+              if (pToSegDist(x, y, pts[i], pts[i + 1]) < 12) {
+                lineFound = l.id;
+                cursorType = "pointer"; // Hand icon when over a line
+              }
             }
+          });
+
+          // Check for Hover on Elbow Points
+          const activeL = lines.find((l) => l.id === activeId);
+          let ptFound = null;
+          if (activeL) {
+            activeL.elbows.forEach((p, i) => {
+              // Check if mouse is over the handle OR the offset delete button
+              const distToHandle = Math.hypot(x - p.x, y - p.y);
+              const distToDelete = Math.hypot(x - (p.x + 18), y - (p.y - 18));
+
+              if (distToHandle < 15 || distToDelete < 10) {
+                ptFound = { idx: i };
+                cursorType = "pointer";
+              }
+            });
+          }
+
+          if (
+            hoveredLineId !== lineFound ||
+            JSON.stringify(ptFound) !== JSON.stringify(hoveredPoint)
+          ) {
+            hoveredLineId = lineFound;
+            hoveredPoint = ptFound;
+            render();
           }
         }
+
+        canvas.style.cursor = cursorType;
       };
 
       window.onmouseup = () => (dragging = null);
 
       function pToSegDist(x, y, a, b) {
         const l2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+        if (l2 === 0) return Math.hypot(x - a.x, y - a.y);
         const t = Math.max(
           0,
           Math.min(1, ((x - a.x) * (b.x - a.x) + (y - a.y) * (b.y - a.y)) / l2),
         );
-        return Math.sqrt(
-          (x - (a.x + t * (b.x - a.x))) ** 2 +
-            (y - (a.y + t * (b.y - a.y))) ** 2,
+        return Math.hypot(
+          x - (a.x + t * (b.x - a.x)),
+          y - (a.y + t * (b.y - a.y)),
         );
       }
+
       function getCenter(l) {
         const a = [l.start, l.end, ...l.elbows];
         return {
@@ -486,36 +535,26 @@
         };
       }
 
-      function addNewLine(type = "straight") {
+      function addNewLine(type) {
         const id = Date.now();
-        const startX = 200,
-          startY = 300;
         let newLine = {
           id,
           name: "L" + (lines.length + 1),
           color: "#000000",
           width: 4,
-          start: { x: startX, y: startY },
-          end: { x: startX + 384, y: startY },
+          start: { x: 200, y: 300 },
+          end: { x: 584, y: 300 },
           elbows: [],
         };
-
-        // Mapping the Canva shapes to our internal Elbow points
         if (type === "step") {
-          // This replicates the "Step" logic from your second SVG
-          newLine.end = { x: startX + 384, y: startY + 80 };
+          newLine.end.y += 80;
           newLine.elbows = [
-            { x: startX + 192, y: startY }, // First pivot
-            { x: startX + 192, y: startY + 80 }, // Second pivot
+            { x: 392, y: 300 },
+            { x: 392, y: 380 },
           ];
         } else if (type === "curved") {
-          // This replicates the "Arc" logic from your third SVG
-          // We use one middle elbow point to force the curve upward
-          newLine.end = { x: startX + 384, y: startY };
-          newLine.elbows = [{ x: startX + 192, y: startY - 50 }];
+          newLine.elbows = [{ x: 392, y: 250 }];
         }
-        // 'straight' remains default (no elbows)
-
         lines.push(newLine);
         setActive(id);
       }
@@ -528,7 +567,7 @@
           document.getElementById("sizeDisplay").innerText = "S" + l.width;
           document.getElementById("lineWidthInput").value = l.width;
         }
-        updateSelector();
+        updateLineList();
         render();
       }
 
@@ -540,18 +579,21 @@
           document.getElementById("colorPreview").style.background = color;
         }
         if (width) {
-          l.width = parseInt(width); // FIXED: Force integer
+          l.width = parseInt(width);
           document.getElementById("sizeDisplay").innerText = "S" + width;
         }
         render();
       }
 
-      function updateSelector() {
-        const sel = document.getElementById("lineSelect");
-        sel.innerHTML = lines
+      function updateLineList() {
+        const container = document.getElementById("lineListContainer");
+        container.innerHTML = lines
           .map(
-            (l) =>
-              `<option value="${l.id}" ${l.id === activeId ? "selected" : ""}>${l.name}</option>`,
+            (l) => `
+          <div class="line-item ${l.id === activeId ? "active" : ""}" onclick="setActive(${l.id})">
+            ${l.name}
+          </div>
+        `,
           )
           .join("");
       }
@@ -561,16 +603,7 @@
         if (lines.length) setActive(lines[0].id);
         else {
           activeId = null;
-          updateSelector();
-          render();
-        }
-      }
-
-      function deleteAll() {
-        if (confirm("Clear everything?")) {
-          lines = [];
-          activeId = null;
-          updateSelector();
+          updateLineList();
           render();
         }
       }
@@ -587,42 +620,19 @@
             return `<path d="${getPath([l.start, ...l.elbows, l.end])}" data-points='${meta}' fill="none" stroke="${l.color}" stroke-width="${l.width}" stroke-linecap="round" stroke-linejoin="round" />`;
           })
           .join("");
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">${svgPaths}</svg>`;
-        const blob = new Blob([svg], { type: "image/svg+xml" });
+        const blob = new Blob(
+          [
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">${svgPaths}</svg>`,
+          ],
+          { type: "image/svg+xml" },
+        );
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "my-design.svg";
+        a.download = "design.svg";
         a.click();
-        URL.revokeObjectURL(url);
       }
 
-      function restoreFromSVG(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(e.target.result, "image/svg+xml");
-          const paths = doc.querySelectorAll("path");
-          paths.forEach((path) => {
-            const meta = path.getAttribute("data-points");
-            if (meta) {
-              const pts = JSON.parse(meta);
-              lines.push({
-                id: Date.now() + Math.random(),
-                name: "L" + (lines.length + 1),
-                ...pts,
-                color: path.getAttribute("stroke"),
-                width: parseInt(path.getAttribute("stroke-width")),
-              });
-            }
-          });
-          if (lines.length) setActive(lines[lines.length - 1].id);
-          event.target.value = "";
-        };
-        reader.readAsText(file);
-      }
       addNewLine("straight");
     </script>
   </body>
