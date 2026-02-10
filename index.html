@@ -290,7 +290,7 @@
 
       // Populate Width Dropdown
       const widthDrop = document.getElementById("width-dropdown");
-      for (let i = 1; i <= 50; i=i+2) {
+      for (let i = 1; i <= 50; i = i + 2) {
         const opt = document.createElement("div");
         opt.className = "width-option";
         opt.innerText = i + "px";
@@ -411,7 +411,6 @@
         // We add a tiny 1px tweak if specific glyphs look too high or low
         const yOffset = type === "move" ? 0 : 1;
         ctx.fillText(icon, x, y + yOffset);
-
         ctx.restore();
       }
 
