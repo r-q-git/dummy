@@ -35,22 +35,27 @@
         top: 20px;
         left: 20px;
         z-index: 3000;
+        border-radius: 4px;
+        border-color: #000;
       }
       #add-trigger {
         width: 45px;
         height: 45px;
-        background: #000;
-        color: #fff;
+        background: #fff;
+        color: #000;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         border-radius: 4px;
+        border: 2px solid;
+        border-color: #000;
       }
       #add-options {
         display: none;
-        background: #000;
+        background: #fff;
         padding: 10px;
+        border : 2px solid black;
         border-radius: 4px;
         margin-top: 5px;
         flex-direction: column;
@@ -88,7 +93,7 @@
         top: 20px;
         left: 50%;
         transform: translateX(-50%);
-        background: #000;
+        background: #fff;
         color: #fff;
         border-radius: 8px;
         display: none;
@@ -116,7 +121,7 @@
         transform: translateX(-50%);
         background: #fff;
         color: #000;
-        border: 1px solid #000;
+        border: 2px solid #000;
         border-radius: 4px;
         max-height: 150px;
         overflow-y: auto;
@@ -157,17 +162,23 @@
 
       .style-btn {
         background: transparent;
-        color: white;
-        border: 1px solid #444;
+        color: #000;
+        border: 2px solid #444;
         padding: 8px 12px;
         border-radius: 4px;
         cursor: pointer;
         width: 100px;
-        font-size: 12px;
+        font-size: 14px;
         text-align: left;
       }
       .style-btn:hover {
-        background: #333;
+        background: grey;
+      }
+
+      .add-line-btn{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
       }
     </style>
   </head>
@@ -175,11 +186,15 @@
     <div id="add-menu-container">
       <div id="add-trigger"><i class="fa-solid fa-plus"></i></div>
       <div id="add-options">
-        <button class="style-btn" onclick="addNewLine('straight')">
-          Straight
+        <button class="style-btn add-line-btn" onclick="addNewLine('straight')">
+          Straight <img src="./line.svg" />
         </button>
-        <button class="style-btn" onclick="addNewLine('step')">Step</button>
-        <button class="style-btn" onclick="addNewLine('curved')">Curved</button>
+        <button class="style-btn add-line-btn" onclick="addNewLine('step')">
+          Step <img src="./curve.svg" />
+        </button>
+        <button class="style-btn add-line-btn" onclick="addNewLine('curved')">
+          Curved <img src="./step.svg" />
+        </button>
       </div>
     </div>
 
@@ -198,7 +213,7 @@
 
     <div id="navbar">
       <div class="nav-item" onclick="toggleMenu('width-dropdown')">
-        <i class="fa-solid fa-bars-staggered"></i>
+        <img src="./linewidth.svg" alt="" class="nav-item" />
         <div id="width-dropdown"></div>
       </div>
 
@@ -208,9 +223,8 @@
           style="
             width: 20px;
             height: 20px;
-            border-radius: 50%;
-            border: 1.5px solid #fff;
-            background: #fff;
+            border-radius: 20%;
+            border: 1.5px solid black;
           "
         ></div>
         <div id="color-palette">
@@ -247,11 +261,16 @@
         </div>
       </div>
 
-      <div class="nav-item" onclick="toggleLock()" id="navLockBtn">
-        <i class="fa-solid fa-unlock"></i>
+      <div
+        class="nav-item"
+        onclick="toggleLock()"
+        id="navLockBtn"
+        style="color: #000"
+      >
+        <i class="fa-solid fa-unlock fa-xl"></i>
       </div>
       <div class="nav-item" onclick="deleteActiveLine()" style="color: #ef4444">
-        <i class="fa-solid fa-trash"></i>
+        <i class="fa-solid fa-xmark fa-xl"></i>
       </div>
     </div>
 
@@ -318,7 +337,6 @@
           ctx.stroke(path);
 
           if (line.id === activeId) {
-            // Draw controls
             const box = getBoundingBox(line);
             drawIcon(box.midX - 40, box.minY - 45, "move");
             drawIcon(
@@ -328,31 +346,54 @@
             );
             drawIcon(box.midX + 40, box.minY - 45, "rotate");
 
-            // Handles
-            [line.start, line.end, ...line.elbows].forEach((p) => {
-              ctx.fillStyle = "#fff";
-              ctx.strokeStyle = "#000";
-              ctx.lineWidth = 1;
+            // Render Handles and Delete Buttons
+            [line.start, line.end].forEach((p) => {
+              drawHandle(p.x, p.y);
+            });
+
+            line.elbows.forEach((p) => {
+              drawHandle(p.x, p.y);
+              // Delete Button: Red circle with white X
+              ctx.fillStyle = "#ef4444";
               ctx.beginPath();
-              ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+              ctx.arc(p.x + 15, p.y - 15, 8, 0, Math.PI * 2);
               ctx.fill();
-              ctx.stroke();
+              ctx.fillStyle = "#fff";
+              ctx.font = "bold 10px Arial";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText("✕", p.x + 15, p.y - 15);
             });
           }
         });
       }
 
+      function drawHandle(x, y) {
+        ctx.fillStyle = "#fff";
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
       function drawIcon(x, y, type) {
-        const size = 30;
+        const size = 30; // Increased slightly for better padding
         ctx.save();
-        ctx.lineWidth = 1.5; // Fixed thickness as requested
+        ctx.lineWidth = 1.5;
         ctx.strokeStyle = "#000";
         ctx.fillStyle = "#fff";
+
+        // Fill background so the line doesn't show through the icon
         ctx.fillRect(x - size / 2, y - size / 2, size, size);
         ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+
         ctx.fillStyle = "#000";
         ctx.textAlign = "center";
-        ctx.font = "16px Arial";
+        ctx.textBaseline = "middle"; // This centers the glyph vertically
+        ctx.font = "18px Arial";
+
         let icon =
           type === "move"
             ? "✥"
@@ -361,29 +402,27 @@
               : type === "locked"
                 ? "🔒"
                 : "🔓";
-        ctx.fillText(icon, x, y + 6);
+
+        // Drawing at (x, y) with 'middle' baseline puts the center of the text at y
+        // We add a tiny 1px tweak if specific glyphs look too high or low
+        const yOffset = type === "move" ? 0 : 1;
+        ctx.fillText(icon, x, y + yOffset);
+
         ctx.restore();
       }
 
       function getPath(pts) {
         if (pts.length < 2) return "";
         let d = `M ${pts[0].x} ${pts[0].y}`;
-
         for (let i = 0; i < pts.length - 1; i++) {
-          // p0 and p3 are the "virtual" points that determine the curve's entry/exit angle
           const p0 = i > 0 ? pts[i - 1] : pts[i];
           const p1 = pts[i];
           const p2 = pts[i + 1];
           const p3 = i < pts.length - 2 ? pts[i + 2] : p2;
-
-          // The '6' divisor creates a standard Catmull-Rom tension
-          // This allows the line to pass exactly through p1 and p2
           const cp1x = p1.x + (p2.x - p0.x) / 6;
           const cp1y = p1.y + (p2.y - p0.y) / 6;
-
           const cp2x = p2.x - (p3.x - p1.x) / 6;
           const cp2y = p2.y - (p3.y - p1.y) / 6;
-
           d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
         }
         return d;
@@ -399,76 +438,92 @@
         };
       }
 
+      function getLineAt(x, y) {
+        // We iterate backwards to select the line "on top" first
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const l = lines[i];
+          const path = new Path2D(getPath([l.start, ...l.elbows, l.end]));
+
+          // Create a wider invisible hit area (20px) for easier selection
+          ctx.lineWidth = 20;
+          if (ctx.isPointInStroke(path, x, y)) return l;
+        }
+        return null;
+      }
+
       canvas.onmousedown = (e) => {
         const x = e.clientX,
           y = e.clientY;
-        const l = lines.find((l) => l.id === activeId);
-        if (l) {
-          const box = getBoundingBox(l);
+        const activeLine = lines.find((l) => l.id === activeId);
+
+        // 1. Check UI elements of the already active line first
+        if (activeLine) {
+          const box = getBoundingBox(activeLine);
+
+          // Check Lock/Move/Rotate Icons
           if (Math.hypot(x - box.midX, y - (box.minY - 45)) < 15) {
             toggleLock();
             return;
           }
-          if (!l.locked) {
+
+          if (!activeLine.locked) {
+            // Check Delete Buttons for Elbows
+            for (let i = 0; i < activeLine.elbows.length; i++) {
+              const p = activeLine.elbows[i];
+              if (Math.hypot(x - (p.x + 15), y - (p.y - 15)) < 10) {
+                activeLine.elbows.splice(i, 1);
+                render();
+                return;
+              }
+            }
+            // Check Draggable Points (Start, End, Elbows)
+            const p = [
+              activeLine.start,
+              activeLine.end,
+              ...activeLine.elbows,
+            ].find((pt) => Math.hypot(x - pt.x, y - pt.y) < 15);
+            if (p) {
+              dragging = { type: "point", ref: p };
+              return;
+            }
+
+            // Check Move/Rotate Icons
             if (Math.hypot(x - (box.midX - 40), y - (box.minY - 45)) < 15) {
-              dragging = { type: "line", line: l, lx: x, ly: y };
+              dragging = { type: "line", line: activeLine, lx: x, ly: y };
               return;
             }
             if (Math.hypot(x - (box.midX + 40), y - (box.minY - 45)) < 15) {
               const c = {
-                x: (l.start.x + l.end.x) / 2,
-                y: (l.start.y + l.end.y) / 2,
+                x: (activeLine.start.x + activeLine.end.x) / 2,
+                y: (activeLine.start.y + activeLine.end.y) / 2,
               };
               dragging = {
                 type: "rotate",
-                line: l,
+                line: activeLine,
                 center: c,
                 sa: Math.atan2(y - c.y, x - c.x),
               };
               return;
             }
-            const p = [l.start, l.end, ...l.elbows].find(
-              (pt) => Math.hypot(x - pt.x, y - pt.y) < 15,
-            );
-            if (p) {
-              dragging = { type: "point", ref: p };
-              return;
-            }
-          }
-        }
-        if (hoveredLineId !== null) setActive(hoveredLineId);
-        else setActive(null);
-      };
-
-      canvas.ondblclick = (e) => {
-        const x = e.clientX,
-          y = e.clientY;
-        const l = lines.find((l) => l.id === activeId);
-        if (!l) return;
-
-        const seq = [l.start, ...l.elbows, l.end];
-        let bestIdx = -1;
-        let minDist = 20;
-
-        for (let i = 0; i < seq.length - 1; i++) {
-          const d = pToSegDist(x, y, seq[i], seq[i + 1]);
-          if (d < minDist) {
-            minDist = d;
-            bestIdx = i; // This finds the specific segment clicked
           }
         }
 
-        if (bestIdx !== -1) {
-          // Inserts the new elbow point so the curve flow is preserved
-          l.elbows.splice(bestIdx, 0, { x, y });
-          render();
+        // 2. If no UI was clicked, try to select a new line
+        const clickedLine = getLineAt(x, y);
+        if (clickedLine) {
+          setActive(clickedLine.id);
+        } else {
+          setActive(null);
         }
       };
 
       window.onmousemove = (e) => {
         const x = e.clientX,
           y = e.clientY;
+        let cursor = "default";
+
         if (dragging) {
+          cursor = "grabbing";
           if (dragging.type === "point") {
             dragging.ref.x = x;
             dragging.ref.y = y;
@@ -502,8 +557,37 @@
             });
             dragging.sa = na;
           }
-          render();
         } else {
+          const l = lines.find((l) => l.id === activeId);
+          if (l && !l.locked) {
+            // Check Points
+            if (
+              [l.start, l.end, ...l.elbows].some(
+                (p) => Math.hypot(x - p.x, y - p.y) < 10,
+              )
+            ) {
+              cursor = "grab";
+            }
+            // Check Delete Buttons
+            if (
+              l.elbows.some(
+                (p) => Math.hypot(x - (p.x + 15), y - (p.y - 15)) < 10,
+              )
+            ) {
+              cursor = "pointer";
+            }
+            // Check Controls
+            const box = getBoundingBox(l);
+            if (Math.hypot(x - box.midX, y - (box.minY - 45)) < 60)
+              cursor = "pointer";
+          }
+          if (cursor === "default" && hoveredLineId) cursor = "pointer";
+        }
+
+        canvas.style.cursor = cursor;
+
+        // Line Hover detection
+        if (!dragging) {
           hoveredLineId = null;
           lines.forEach((l) => {
             const pts = [l.start, ...l.elbows, l.end];
@@ -511,8 +595,8 @@
               if (pToSegDist(x, y, pts[i], pts[i + 1]) < 10)
                 hoveredLineId = l.id;
           });
-          render();
         }
+        render();
       };
 
       window.onmouseup = () => (dragging = null);
@@ -552,11 +636,12 @@
           setActive(l.id);
         }
       }
+
       function deleteActiveLine() {
         lines = lines.filter((l) => l.id !== activeId);
         setActive(null);
       }
-      // --- UPDATED: Add Line Templates ---
+
       function addNewLine(type) {
         const id = Date.now();
         let newLine = {
@@ -568,22 +653,55 @@
           elbows: [],
           locked: false,
         };
-
         if (type === "step") {
-          // Step requires specific elbow placement to look like a "stair"
           newLine.elbows = [
             { x: 350, y: 300 },
             { x: 350, y: 450 },
           ];
           newLine.end = { x: 500, y: 450 };
         } else if (type === "curved") {
-          // Curved starts with one elbow in the middle to show the arc
           newLine.elbows = [{ x: 350, y: 200 }];
         }
-
         lines.push(newLine);
         setActive(id);
       }
+
+      canvas.ondblclick = (e) => {
+        // Use offsetX/Y for accurate canvas coordinates
+        const x = e.offsetX;
+        const y = e.offsetY;
+
+        const l = lines.find((l) => l.id === activeId);
+        if (!l || l.locked) return;
+
+        // 1. Create a "hit area" path for the current line
+        const pts = [l.start, ...l.elbows, l.end];
+        const path = new Path2D(getPath(pts));
+
+        // 2. Check if the double-click was actually ON the line
+        // We use a wider lineWidth (20) just for the "hit test" to make it easier to click
+        ctx.lineWidth = 20;
+        if (ctx.isPointInStroke(path, x, y)) {
+          // Find the best segment to insert the new point into
+          const seq = [l.start, ...l.elbows, l.end];
+          let bestIdx = -1;
+          let minDist = 30;
+
+          for (let i = 0; i < seq.length - 1; i++) {
+            const d = pToSegDist(x, y, seq[i], seq[i + 1]);
+            if (d < minDist) {
+              minDist = d;
+              bestIdx = i;
+            }
+          }
+
+          if (bestIdx !== -1) {
+            // Insert the point into the elbows array at the correct index
+            l.elbows.splice(bestIdx, 0, { x, y });
+            render();
+          }
+        }
+      };
 
       function pToSegDist(x, y, a, b) {
         const l2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
@@ -597,6 +715,7 @@
           y - (a.y + t * (b.y - a.y)),
         );
       }
+
       function downloadSVG() {
         const paths = lines
           .map(
