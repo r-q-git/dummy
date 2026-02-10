@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Designer Pro - Direct Select</title>
+    <title>Designer Pro - Zen Mode</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -29,219 +29,255 @@
         cursor: crosshair;
       }
 
-      #navbar {
+      /* Top Left: Add Menu (Square & Persistent) */
+      #add-menu-container {
         position: fixed;
+        top: 20px;
         left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 80px;
-        background: white;
-        border: 2.5px solid #000;
-        border-radius: 40px;
+        z-index: 3000;
+      }
+      #add-trigger {
+        width: 45px;
+        height: 45px;
+        background: #000;
+        color: #fff;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px 0;
-        gap: 12px;
-        z-index: 2000;
-        box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
-      }
-
-      /* New Sidebar List */
-      #lineListContainer {
-        max-height: 150px;
-        overflow-y: auto;
-        width: 60px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        scrollbar-width: none;
-      }
-      .line-item {
-        font-size: 11px;
-        font-weight: 900;
-        padding: 5px;
-        border: 1.5px solid #333;
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: 0.2s;
-      }
-      .line-item.active {
-        background: #ff9100;
-        color: white;
-        border-color: #000;
-      }
-
-      .nav-item {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: 2px solid #333;
-        display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        position: relative;
-        background: white;
-        transition: 0.15s;
+        border-radius: 4px;
       }
-      .nav-item:hover {
-        background: #f8fafc;
-        transform: scale(1.05);
-      }
-
-      .color-circle {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 1.5px solid #000;
-      }
-      input[type="color"] {
-        position: absolute;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-      }
-
-      .size-popup {
-        position: absolute;
-        left: 55px;
-        padding-left: 20px;
+      #add-options {
         display: none;
+        background: #000;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 5px;
         flex-direction: column;
-        z-index: 3000;
+        gap: 8px;
       }
-      .size-popup-content {
-        background: white;
-        border: 2px solid #000;
-        padding: 12px;
-        border-radius: 12px;
-        width: 130px;
-        box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
-      }
-      .nav-item:hover .size-popup {
+      /* Keep the menu open on hover */
+      #add-menu-container:hover #add-options {
         display: flex;
       }
 
-      .style-btn {
-        background: #f1f5f9;
-        border: 1.5px solid #000;
-        margin-bottom: 5px;
-        padding: 5px;
-        border-radius: 6px;
-        cursor: pointer;
-        width: 100%;
-        font-weight: bold;
-        font-size: 11px;
+      /* Top Right: Project Actions */
+      #project-actions {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 3000;
       }
-      .btn-red {
-        border-color: #ef4444;
-        color: #ef4444;
+      .btn-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #333;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      /* Contextual Navbar (Black BG, White Icons) */
+      #navbar {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #000;
+        color: #fff;
+        border-radius: 8px;
+        display: none;
+        align-items: center;
+        padding: 10px 20px;
+        gap: 25px;
+        z-index: 2000;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .nav-item {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        position: relative;
+        color: #fff;
+      }
+
+      /* Width Dropdown with Scrollbar */
+      #width-dropdown {
+        display: none;
+        position: absolute;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        color: #000;
+        border: 1px solid #000;
+        border-radius: 4px;
+        max-height: 150px;
+        overflow-y: auto;
+        width: 70px;
+        z-index: 3000;
+      }
+      .width-option {
+        padding: 8px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+      }
+      .width-option:hover {
+        background: #f0f0f0;
+      }
+
+      /* Color Palette (Horizontal Dots) */
+      #color-palette {
+        display: none;
+        position: absolute;
+        top: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #e2e8f0;
+        padding: 8px 15px;
+        border-radius: 30px;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .palette-color {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        cursor: pointer;
+      }
+
+      .style-btn {
+        background: transparent;
+        color: white;
+        border: 1px solid #444;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100px;
+        font-size: 12px;
+        text-align: left;
+      }
+      .style-btn:hover {
+        background: #333;
       }
     </style>
   </head>
   <body>
+    <div id="add-menu-container">
+      <div id="add-trigger"><i class="fa-solid fa-plus"></i></div>
+      <div id="add-options">
+        <button class="style-btn" onclick="addNewLine('straight')">
+          Straight
+        </button>
+        <button class="style-btn" onclick="addNewLine('step')">Step</button>
+        <button class="style-btn" onclick="addNewLine('curved')">Curved</button>
+      </div>
+    </div>
+
+    <div id="project-actions">
+      <div
+        class="btn-circle"
+        onclick="document.getElementById('svgInput').click()"
+      >
+        <i class="fa-solid fa-upload"></i>
+      </div>
+      <div class="btn-circle" onclick="downloadSVG()">
+        <i class="fa-solid fa-download"></i>
+      </div>
+      <input type="file" id="svgInput" accept=".svg" style="display: none" />
+    </div>
+
     <div id="navbar">
-      <div class="nav-item" id="plus-button">
-        <i class="fa-solid fa-plus"></i>
-        <div class="size-popup">
-          <div class="size-popup-content">
-            <label style="font-size: 10px; font-weight: 900; margin-bottom: 8px"
-              >STYLE</label
-            >
-            <button class="style-btn" onclick="addNewLine('straight')">
-              Straight
-            </button>
-            <button class="style-btn" onclick="addNewLine('step')">Step</button>
-            <button class="style-btn" onclick="addNewLine('curved')">
-              Curved
-            </button>
-          </div>
+      <div class="nav-item" onclick="toggleMenu('width-dropdown')">
+        <i class="fa-solid fa-bars-staggered"></i>
+        <div id="width-dropdown"></div>
+      </div>
+
+      <div class="nav-item" onclick="toggleMenu('color-palette')">
+        <div
+          id="active-color-swatch"
+          style="
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid #fff;
+            background: #fff;
+          "
+        ></div>
+        <div id="color-palette">
+          <div
+            class="palette-color"
+            style="background: #3b82f6"
+            onclick="updateActiveLine('#3b82f6', null)"
+          ></div>
+          <div
+            class="palette-color"
+            style="background: #22c55e"
+            onclick="updateActiveLine('#22c55e', null)"
+          ></div>
+          <div
+            class="palette-color"
+            style="background: #eab308"
+            onclick="updateActiveLine('#eab308', null)"
+          ></div>
+          <div
+            class="palette-color"
+            style="background: #ef4444"
+            onclick="updateActiveLine('#ef4444', null)"
+          ></div>
+          <div
+            class="palette-color"
+            style="background: #000000"
+            onclick="updateActiveLine('#000000', null)"
+          ></div>
+          <div
+            class="palette-color"
+            style="background: #ffffff"
+            onclick="updateActiveLine('#ffffff', null)"
+          ></div>
         </div>
       </div>
 
-      <div id="lineListContainer"></div>
-
-      <div class="nav-item">
-        <div id="colorPreview" class="color-circle"></div>
-        <input
-          type="color"
-          id="lineColor"
-          oninput="updateActiveLine(this.value, null)"
-        />
+      <div class="nav-item" onclick="toggleLock()" id="navLockBtn">
+        <i class="fa-solid fa-unlock"></i>
       </div>
-
-      <div class="nav-item">
-        <span style="font-size: 12px; font-weight: 900" id="sizeDisplay"
-          >S5</span
-        >
-        <div class="size-popup">
-          <div class="size-popup-content">
-            <label style="font-size: 10px; font-weight: 900; margin-bottom: 8px"
-              >SIZE</label
-            >
-            <input
-              type="range"
-              min="1"
-              max="20"
-              value="4"
-              id="lineWidthInput"
-              oninput="updateActiveLine(null, this.value)"
-            />
-          </div>
-        </div>
+      <div class="nav-item" onclick="deleteActiveLine()" style="color: #ef4444">
+        <i class="fa-solid fa-trash"></i>
       </div>
-
-       <div class="nav-item btn-red" onclick="deleteActiveLine()">
-        <i class="fa-solid fa-xmark"></i>
-      </div>
-      <div class="nav-item" onclick="downloadSVG()">
-      <i class="fa-solid fa-paper-plane"></i>
-      </div>
-     
     </div>
 
-    <div id="canvas-wrapper">
-      <canvas id="editorCanvas"></canvas>
-    </div>
+    <div id="canvas-wrapper"><canvas id="editorCanvas"></canvas></div>
 
     <script>
       const canvas = document.getElementById("editorCanvas");
       const ctx = canvas.getContext("2d");
-      const GREEK = [
-        "α",
-        "β",
-        "γ",
-        "δ",
-        "ε",
-        "ζ",
-        "η",
-        "θ",
-        "ι",
-        "κ",
-        "λ",
-        "μ",
-        "ν",
-        "ξ",
-        "ο",
-        "π",
-        "ρ",
-        "σ",
-        "τ",
-        "υ",
-        "φ",
-        "χ",
-        "ψ",
-        "ω",
-      ];
       let lines = [],
         activeId = null,
         dragging = null,
-        hoveredPoint = null,
         hoveredLineId = null;
+
+      // Populate Width Dropdown
+      const widthDrop = document.getElementById("width-dropdown");
+      for (let i = 1; i <= 50; i++) {
+        const opt = document.createElement("div");
+        opt.className = "width-option";
+        opt.innerText = i + "px";
+        opt.onclick = (e) => {
+          e.stopPropagation();
+          updateActiveLine(null, i);
+          toggleMenu("width-dropdown");
+        };
+        widthDrop.appendChild(opt);
+      }
 
       function resize() {
         canvas.width = window.innerWidth;
@@ -251,18 +287,28 @@
       window.onresize = resize;
       resize();
 
+      function toggleMenu(id) {
+        const el = document.getElementById(id);
+        const current = el.style.display;
+        document.getElementById("width-dropdown").style.display = "none";
+        document.getElementById("color-palette").style.display = "none";
+        el.style.display =
+          current === "flex" || current === "block"
+            ? "none"
+            : id === "color-palette"
+              ? "flex"
+              : "block";
+      }
+
       function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lines.forEach((line) => {
           const pts = [line.start, ...line.elbows, line.end];
           const path = new Path2D(getPath(pts));
 
-          // STRICT HOVER/ACTIVE HIGHLIGHT
-          // Only shows highlight if mouse is actually over the line OR it's the active one
           if (line.id === activeId || line.id === hoveredLineId) {
             ctx.strokeStyle = "#FF9100";
-            ctx.lineWidth = line.width + 5;
-            ctx.lineCap = ctx.lineJoin = "round";
+            ctx.lineWidth = line.width + 4;
             ctx.stroke(path);
           }
 
@@ -272,18 +318,127 @@
           ctx.stroke(path);
 
           if (line.id === activeId) {
-            drawHandle(line.start, "#ffcc00", "+");
-            drawHandle(line.end, "#ffcc00", "+");
-            line.elbows.forEach((p, i) => {
-              const isPtHovered = hoveredPoint && hoveredPoint.idx === i;
-              drawHandle(p, "#ebebeb", GREEK[i % GREEK.length], isPtHovered);
-            });
+            // Draw controls
             const box = getBoundingBox(line);
-            drawIcon(box.midX - 25, box.minY - 40, "move");
-            drawIcon(box.midX + 25, box.minY - 40, "rotate");
+            drawIcon(box.midX - 40, box.minY - 45, "move");
+            drawIcon(
+              box.midX,
+              box.minY - 45,
+              line.locked ? "locked" : "unlock",
+            );
+            drawIcon(box.midX + 40, box.minY - 45, "rotate");
+
+            // Handles
+            [line.start, line.end, ...line.elbows].forEach((p) => {
+              ctx.fillStyle = "#fff";
+              ctx.strokeStyle = "#000";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            });
           }
         });
       }
+
+      function drawIcon(x, y, type) {
+        const size = 30;
+        ctx.save();
+        ctx.lineWidth = 1.5; // Fixed thickness as requested
+        ctx.strokeStyle = "#000";
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
+        ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "center";
+        ctx.font = "16px Arial";
+        let icon =
+          type === "move"
+            ? "✥"
+            : type === "rotate"
+              ? "↻"
+              : type === "locked"
+                ? "🔒"
+                : "🔓";
+        ctx.fillText(icon, x, y + 6);
+        ctx.restore();
+      }
+
+      function getPath(pts) {
+        if (pts.length < 2) return "";
+        let d = `M ${pts[0].x} ${pts[0].y}`;
+
+        for (let i = 0; i < pts.length - 1; i++) {
+          // p0 and p3 are the "virtual" points that determine the curve's entry/exit angle
+          const p0 = i > 0 ? pts[i - 1] : pts[i];
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const p3 = i < pts.length - 2 ? pts[i + 2] : p2;
+
+          // The '6' divisor creates a standard Catmull-Rom tension
+          // This allows the line to pass exactly through p1 and p2
+          const cp1x = p1.x + (p2.x - p0.x) / 6;
+          const cp1y = p1.y + (p2.y - p0.y) / 6;
+
+          const cp2x = p2.x - (p3.x - p1.x) / 6;
+          const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+          d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+        }
+        return d;
+      }
+
+      function getBoundingBox(line) {
+        const all = [line.start, line.end, ...line.elbows];
+        const minX = Math.min(...all.map((p) => p.x)),
+          maxX = Math.max(...all.map((p) => p.x));
+        return {
+          minY: Math.min(...all.map((p) => p.y)),
+          midX: (minX + maxX) / 2,
+        };
+      }
+
+      canvas.onmousedown = (e) => {
+        const x = e.clientX,
+          y = e.clientY;
+        const l = lines.find((l) => l.id === activeId);
+        if (l) {
+          const box = getBoundingBox(l);
+          if (Math.hypot(x - box.midX, y - (box.minY - 45)) < 15) {
+            toggleLock();
+            return;
+          }
+          if (!l.locked) {
+            if (Math.hypot(x - (box.midX - 40), y - (box.minY - 45)) < 15) {
+              dragging = { type: "line", line: l, lx: x, ly: y };
+              return;
+            }
+            if (Math.hypot(x - (box.midX + 40), y - (box.minY - 45)) < 15) {
+              const c = {
+                x: (l.start.x + l.end.x) / 2,
+                y: (l.start.y + l.end.y) / 2,
+              };
+              dragging = {
+                type: "rotate",
+                line: l,
+                center: c,
+                sa: Math.atan2(y - c.y, x - c.x),
+              };
+              return;
+            }
+            const p = [l.start, l.end, ...l.elbows].find(
+              (pt) => Math.hypot(x - pt.x, y - pt.y) < 15,
+            );
+            if (p) {
+              dragging = { type: "point", ref: p };
+              return;
+            }
+          }
+        }
+        if (hoveredLineId !== null) setActive(hoveredLineId);
+        else setActive(null);
+      };
 
       canvas.ondblclick = (e) => {
         const x = e.clientX,
@@ -292,150 +447,28 @@
         if (!l) return;
 
         const seq = [l.start, ...l.elbows, l.end];
-        let bestIdx = -1,
-          minDist = 20; // Tightened distance for better accuracy
+        let bestIdx = -1;
+        let minDist = 20;
 
         for (let i = 0; i < seq.length - 1; i++) {
           const d = pToSegDist(x, y, seq[i], seq[i + 1]);
           if (d < minDist) {
             minDist = d;
-            bestIdx = i;
+            bestIdx = i; // This finds the specific segment clicked
           }
         }
 
         if (bestIdx !== -1) {
-          // Insert new elbow point between the two closest points
+          // Inserts the new elbow point so the curve flow is preserved
           l.elbows.splice(bestIdx, 0, { x, y });
           render();
-        }
-      };
-
-      function drawHandle(p, color, label, showCross) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-
-        ctx.fillStyle = "black";
-        ctx.font = "bold 12px Sans";
-        ctx.textAlign = "center";
-        ctx.fillText(label, p.x, p.y + 4);
-
-        // Offset the delete cross away from the line (Top-Right)
-        if (showCross) {
-          const offsetX = 18;
-          const offsetY = -18;
-
-          // Draw a small red circle background for the delete button
-          ctx.beginPath();
-          ctx.arc(p.x + offsetX, p.y + offsetY, 8, 0, Math.PI * 2);
-          ctx.fillStyle = "#ef4444";
-          ctx.fill();
-
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          // Small white 'x'
-          ctx.moveTo(p.x + offsetX - 4, p.y + offsetY - 4);
-          ctx.lineTo(p.x + offsetX + 4, p.y + offsetY + 4);
-          ctx.moveTo(p.x + offsetX + 4, p.y + offsetY - 4);
-          ctx.lineTo(p.x + offsetX - 4, p.y + offsetY + 4);
-          ctx.stroke();
-        }
-      }
-
-      function drawIcon(x, y, type) {
-        ctx.fillStyle = "white";
-        ctx.beginPath();
-        ctx.arc(x, y, 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "grey";
-        ctx.stroke();
-        ctx.fillStyle = "#000";
-        ctx.textAlign = "center";
-        ctx.fillText(type === "move" ? "✥" : "↻", x, y + 5);
-      }
-
-      function getPath(pts) {
-        let d = `M ${pts[0].x} ${pts[0].y}`;
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p0 = pts[i - 1] || pts[i],
-            p1 = pts[i],
-            p2 = pts[i + 1],
-            p3 = pts[i + 2] || p2;
-          d += ` C ${p1.x + (p2.x - p0.x) * 0.25} ${p1.y + (p2.y - p0.y) * 0.25}, ${p2.x - (p3.x - p1.x) * 0.25} ${p2.y - (p3.y - p1.y) * 0.25}, ${p2.x} ${p2.y}`;
-        }
-        return d;
-      }
-
-      function getBoundingBox(line) {
-        const all = [line.start, line.end, ...line.elbows];
-        return {
-          minY: Math.min(...all.map((p) => p.y)),
-          midX:
-            (Math.min(...all.map((p) => p.x)) +
-              Math.max(...all.map((p) => p.x))) /
-            2,
-        };
-      }
-
-      // --- 3. Updated MouseDown to handle the Offset Delete Click ---
-      canvas.onmousedown = (e) => {
-        const x = e.clientX,
-          y = e.clientY;
-        const l = lines.find((l) => l.id === activeId);
-
-        if (l && hoveredPoint) {
-          const p = l.elbows[hoveredPoint.idx];
-          const distToDelete = Math.hypot(x - (p.x + 18), y - (p.y - 18));
-
-          // If clicking the specifically offset delete button
-          if (distToDelete < 12) {
-            l.elbows.splice(hoveredPoint.idx, 1);
-            hoveredPoint = null;
-            render();
-            return;
-          }
-        }
-
-        // Continue with normal dragging/selection logic...
-        if (l) {
-          const pts = [l.start, l.end, ...l.elbows];
-          const p = pts.find((pt) => Math.hypot(x - pt.x, y - pt.y) < 15);
-          if (p) {
-            dragging = { type: "point", ref: p };
-            return;
-          }
-
-          const box = getBoundingBox(l);
-          if (Math.hypot(x - (box.midX - 25), y - (box.minY - 40)) < 18) {
-            dragging = { type: "line", line: l, lx: x, ly: y };
-            return;
-          }
-          if (Math.hypot(x - (box.midX + 25), y - (box.minY - 40)) < 18) {
-            const c = getCenter(l);
-            dragging = {
-              type: "rotate",
-              line: l,
-              center: c,
-              sa: Math.atan2(y - c.y, x - c.x),
-            };
-            return;
-          }
-        }
-
-        if (hoveredLineId !== null) {
-          setActive(hoveredLineId);
         }
       };
 
       window.onmousemove = (e) => {
         const x = e.clientX,
           y = e.clientY;
-        let cursorType = "default";
-
         if (dragging) {
-          cursorType = "grabbing"; // Hand closed while moving
           if (dragging.type === "point") {
             dragging.ref.x = x;
             dragging.ref.y = y;
@@ -471,48 +504,86 @@
           }
           render();
         } else {
-          // Check for Hover on Lines
-          let lineFound = null;
+          hoveredLineId = null;
           lines.forEach((l) => {
             const pts = [l.start, ...l.elbows, l.end];
-            for (let i = 0; i < pts.length - 1; i++) {
-              if (pToSegDist(x, y, pts[i], pts[i + 1]) < 12) {
-                lineFound = l.id;
-                cursorType = "pointer"; // Hand icon when over a line
-              }
-            }
+            for (let i = 0; i < pts.length - 1; i++)
+              if (pToSegDist(x, y, pts[i], pts[i + 1]) < 10)
+                hoveredLineId = l.id;
           });
-
-          // Check for Hover on Elbow Points
-          const activeL = lines.find((l) => l.id === activeId);
-          let ptFound = null;
-          if (activeL) {
-            activeL.elbows.forEach((p, i) => {
-              // Check if mouse is over the handle OR the offset delete button
-              const distToHandle = Math.hypot(x - p.x, y - p.y);
-              const distToDelete = Math.hypot(x - (p.x + 18), y - (p.y - 18));
-
-              if (distToHandle < 15 || distToDelete < 10) {
-                ptFound = { idx: i };
-                cursorType = "pointer";
-              }
-            });
-          }
-
-          if (
-            hoveredLineId !== lineFound ||
-            JSON.stringify(ptFound) !== JSON.stringify(hoveredPoint)
-          ) {
-            hoveredLineId = lineFound;
-            hoveredPoint = ptFound;
-            render();
-          }
+          render();
         }
-
-        canvas.style.cursor = cursorType;
       };
 
       window.onmouseup = () => (dragging = null);
+
+      function setActive(id) {
+        activeId = id ? Number(id) : null;
+        const nav = document.getElementById("navbar");
+        if (activeId) {
+          const l = lines.find((l) => l.id === activeId);
+          document.getElementById("active-color-swatch").style.background =
+            l.color;
+          document.getElementById("navLockBtn").innerHTML = l.locked
+            ? '<i class="fa-solid fa-lock" style="color:#3b82f6"></i>'
+            : '<i class="fa-solid fa-unlock"></i>';
+          nav.style.display = "flex";
+        } else {
+          nav.style.display = "none";
+        }
+        render();
+      }
+
+      function updateActiveLine(c, w) {
+        const l = lines.find((l) => l.id === activeId);
+        if (!l) return;
+        if (c) {
+          l.color = c;
+          document.getElementById("active-color-swatch").style.background = c;
+        }
+        if (w) l.width = w;
+        render();
+      }
+
+      function toggleLock() {
+        const l = lines.find((l) => l.id === activeId);
+        if (l) {
+          l.locked = !l.locked;
+          setActive(l.id);
+        }
+      }
+      function deleteActiveLine() {
+        lines = lines.filter((l) => l.id !== activeId);
+        setActive(null);
+      }
+      // --- UPDATED: Add Line Templates ---
+      function addNewLine(type) {
+        const id = Date.now();
+        let newLine = {
+          id,
+          color: "#000000",
+          width: 4,
+          start: { x: 200, y: 300 },
+          end: { x: 500, y: 300 },
+          elbows: [],
+          locked: false,
+        };
+
+        if (type === "step") {
+          // Step requires specific elbow placement to look like a "stair"
+          newLine.elbows = [
+            { x: 350, y: 300 },
+            { x: 350, y: 450 },
+          ];
+          newLine.end = { x: 500, y: 450 };
+        } else if (type === "curved") {
+          // Curved starts with one elbow in the middle to show the arc
+          newLine.elbows = [{ x: 350, y: 200 }];
+        }
+
+        lines.push(newLine);
+        setActive(id);
+      }
 
       function pToSegDist(x, y, a, b) {
         const l2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
@@ -526,114 +597,22 @@
           y - (a.y + t * (b.y - a.y)),
         );
       }
-
-      function getCenter(l) {
-        const a = [l.start, l.end, ...l.elbows];
-        return {
-          x: a.reduce((s, p) => s + p.x, 0) / a.length,
-          y: a.reduce((s, p) => s + p.y, 0) / a.length,
-        };
-      }
-
-      function addNewLine(type) {
-        const id = Date.now();
-        let newLine = {
-          id,
-          name: "L" + (lines.length + 1),
-          color: "#000000",
-          width: 4,
-          start: { x: 200, y: 300 },
-          end: { x: 584, y: 300 },
-          elbows: [],
-        };
-        if (type === "step") {
-          newLine.end.y += 80;
-          newLine.elbows = [
-            { x: 392, y: 300 },
-            { x: 392, y: 380 },
-          ];
-        } else if (type === "curved") {
-          newLine.elbows = [{ x: 392, y: 250 }];
-        }
-        lines.push(newLine);
-        setActive(id);
-      }
-
-      function setActive(id) {
-        activeId = Number(id);
-        const l = lines.find((l) => l.id === activeId);
-        if (l) {
-          document.getElementById("colorPreview").style.background = l.color;
-          document.getElementById("sizeDisplay").innerText = "S" + l.width;
-          document.getElementById("lineWidthInput").value = l.width;
-        }
-        updateLineList();
-        render();
-      }
-
-      function updateActiveLine(color, width) {
-        const l = lines.find((l) => l.id === activeId);
-        if (!l) return;
-        if (color) {
-          l.color = color;
-          document.getElementById("colorPreview").style.background = color;
-        }
-        if (width) {
-          l.width = parseInt(width);
-          document.getElementById("sizeDisplay").innerText = "S" + width;
-        }
-        render();
-      }
-
-      function updateLineList() {
-        const container = document.getElementById("lineListContainer");
-        container.innerHTML = lines
+      function downloadSVG() {
+        const paths = lines
           .map(
-            (l) => `
-          <div class="line-item ${l.id === activeId ? "active" : ""}" onclick="setActive(${l.id})">
-            ${l.name}
-          </div>
-        `,
+            (l) =>
+              `<path d="${getPath([l.start, ...l.elbows, l.end])}" fill="none" stroke="${l.color}" stroke-width="${l.width}" />`,
           )
           .join("");
-      }
-
-      function deleteActiveLine() {
-        lines = lines.filter((l) => l.id !== activeId);
-        if (lines.length) setActive(lines[0].id);
-        else {
-          activeId = null;
-          updateLineList();
-          render();
-        }
-      }
-
-      function downloadSVG() {
-        if (!lines.length) return;
-        const svgPaths = lines
-          .map((l) => {
-            const meta = JSON.stringify({
-              start: l.start,
-              end: l.end,
-              elbows: l.elbows,
-            });
-            return `<path d="${getPath([l.start, ...l.elbows, l.end])}" data-points='${meta}' fill="none" stroke="${l.color}" stroke-width="${l.width}" stroke-linecap="round" stroke-linejoin="round" />`;
-          })
-          .join("");
         const blob = new Blob(
-          [
-            `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">${svgPaths}</svg>`,
-          ],
+          [`<svg xmlns="http://www.w3.org/2000/svg">${paths}</svg>`],
           { type: "image/svg+xml" },
         );
-        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url;
-        a.download = "design.svg";
+        a.href = URL.createObjectURL(blob);
+        a.download = "drawing.svg";
         a.click();
       }
-
-      addNewLine("straight");
     </script>
   </body>
 </html>
