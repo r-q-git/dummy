@@ -523,82 +523,92 @@
       window.onmousemove = (e) => {
         const x = e.clientX,
           y = e.clientY;
+
+        // Boundary limits (padding of 5px so handles don't get stuck on the very edge)
+        const minX = 5,
+          minY = 5;
+        const maxX = canvas.width - 5,
+          maxY = canvas.height - 5;
+
         let cursor = "default";
 
         if (dragging) {
           cursor = "grabbing";
+
           if (dragging.type === "point") {
-            dragging.ref.x = x;
-            dragging.ref.y = y;
+            // Prevent point from leaving canvas
+            dragging.ref.x = Math.max(minX, Math.min(maxX, x));
+            dragging.ref.y = Math.max(minY, Math.min(maxY, y));
           } else if (dragging.type === "line") {
-            const dx = x - dragging.lx,
-              dy = y - dragging.ly;
-            [
+            let dx = x - dragging.lx;
+            let dy = y - dragging.ly;
+
+            const pts = [
               dragging.line.start,
               dragging.line.end,
               ...dragging.line.elbows,
-            ].forEach((p) => {
-              p.x += dx;
-              p.y += dy;
+            ];
+
+            // Check if ANY point in the line would go out of bounds
+            const canMoveX = pts.every(
+              (p) => p.x + dx >= minX && p.x + dx <= maxX,
+            );
+            const canMoveY = pts.every(
+              (p) => p.y + dy >= minY && p.y + dy <= maxY,
+            );
+
+            pts.forEach((p) => {
+              if (canMoveX) p.x += dx;
+              if (canMoveY) p.y += dy;
             });
+
             dragging.lx = x;
             dragging.ly = y;
           } else if (dragging.type === "rotate") {
             const na = Math.atan2(y - dragging.center.y, x - dragging.center.x);
             const diff = na - dragging.sa;
+
             [
               dragging.line.start,
               dragging.line.end,
               ...dragging.line.elbows,
             ].forEach((p) => {
-              const dx = p.x - dragging.center.x,
-                dy = p.y - dragging.center.y;
-              p.x =
+              const dx = p.x - dragging.center.x;
+              const dy = p.y - dragging.center.y;
+
+              // Calculate new potential positions
+              const nx =
                 dragging.center.x + dx * Math.cos(diff) - dy * Math.sin(diff);
-              p.y =
+              const ny =
                 dragging.center.y + dx * Math.sin(diff) + dy * Math.cos(diff);
+
+              // Only update if within bounds
+              p.x = Math.max(minX, Math.min(maxX, nx));
+              p.y = Math.max(minY, Math.min(maxY, ny));
             });
             dragging.sa = na;
           }
         } else {
+          // ... rest of your cursor/hover logic (getLineAt, etc.) ...
           const l = lines.find((l) => l.id === activeId);
           if (l && !l.locked) {
-            // Check Points
             if (
               [l.start, l.end, ...l.elbows].some(
                 (p) => Math.hypot(x - p.x, y - p.y) < 10,
               )
-            ) {
+            )
               cursor = "grab";
-            }
-            // Check Delete Buttons
             if (
               l.elbows.some(
                 (p) => Math.hypot(x - (p.x + 15), y - (p.y - 15)) < 10,
               )
-            ) {
-              cursor = "pointer";
-            }
-            // Check Controls
-            const box = getBoundingBox(l);
-            if (Math.hypot(x - box.midX, y - (box.minY - 45)) < 60)
+            )
               cursor = "pointer";
           }
           if (cursor === "default" && hoveredLineId) cursor = "pointer";
         }
 
         canvas.style.cursor = cursor;
-
-        // Line Hover detection
-        if (!dragging) {
-          hoveredLineId = null;
-          lines.forEach((l) => {
-            const pts = [l.start, ...l.elbows, l.end];
-            for (let i = 0; i < pts.length - 1; i++)
-              if (pToSegDist(x, y, pts[i], pts[i + 1]) < 10)
-                hoveredLineId = l.id;
-          });
-        }
         render();
       };
 
