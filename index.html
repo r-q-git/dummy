@@ -55,7 +55,7 @@
         display: none;
         background: #fff;
         padding: 10px;
-        border : 2px solid black;
+        border: 2px solid black;
         border-radius: 4px;
         margin-top: 5px;
         flex-direction: column;
@@ -74,6 +74,17 @@
         display: flex;
         gap: 10px;
         z-index: 3000;
+        width: 45px;
+        height: 45px;
+        background: #fff;
+        color: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 4px;
+        border: 2px solid;
+        border-color: #000;
       }
       .btn-circle {
         width: 40px;
@@ -175,7 +186,7 @@
         background: grey;
       }
 
-      .add-line-btn{
+      .add-line-btn {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -199,16 +210,9 @@
     </div>
 
     <div id="project-actions">
-      <div
-        class="btn-circle"
-        onclick="document.getElementById('svgInput').click()"
-      >
-        <i class="fa-solid fa-upload"></i>
+      <div id="send-btn" onclick="downloadSVG()">
+        <i class="fa-solid fa-square-arrow-up-right fa-xl"></i>
       </div>
-      <div class="btn-circle" onclick="downloadSVG()">
-        <i class="fa-solid fa-download"></i>
-      </div>
-      <input type="file" id="svgInput" accept=".svg" style="display: none" />
     </div>
 
     <div id="navbar">
@@ -326,7 +330,7 @@
           const path = new Path2D(getPath(pts));
 
           if (line.id === activeId || line.id === hoveredLineId) {
-            ctx.strokeStyle = "#FF9100";
+            ctx.strokeStyle = "#c031ff";
             ctx.lineWidth = line.width + 4;
             ctx.stroke(path);
           }
@@ -609,8 +613,8 @@
           document.getElementById("active-color-swatch").style.background =
             l.color;
           document.getElementById("navLockBtn").innerHTML = l.locked
-            ? '<i class="fa-solid fa-lock" style="color:#3b82f6"></i>'
-            : '<i class="fa-solid fa-unlock"></i>';
+            ? '<i class="fa-solid fa-lock fa-lg" style="color:#3b82f6"></i>'
+            : '<i class="fa-solid fa-unlock fa-lg"></i>';
           nav.style.display = "flex";
         } else {
           nav.style.display = "none";
@@ -646,8 +650,8 @@
         const id = Date.now();
         let newLine = {
           id,
-          color: "#000000",
-          width: 4,
+          color: "#22c55e",
+          width: 6,
           start: { x: 200, y: 300 },
           end: { x: 500, y: 300 },
           elbows: [],
