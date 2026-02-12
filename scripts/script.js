@@ -5,7 +5,10 @@ let lines = [],
   dragging = null,
   hoveredLineId = null;
 
-// Populate Width Dropdown
+/**
+ * @description
+ * this takes the width-dropdown and dynamically add the line value options in it, along with control added to the each div to update the line width and toggle the menu to close.
+ */
 const widthDrop = document.getElementById("width-dropdown");
 for (let i = 1; i <= 50; i = i + 2) {
   const opt = document.createElement("div");
@@ -19,6 +22,14 @@ for (let i = 1; i <= 50; i = i + 2) {
   widthDrop.appendChild(opt);
 }
 
+/**
+ * @description
+ * this method resize the canvas to the window size.
+ * also when we change the canvas size, by default the everything on the canvas gets erased. so we need to call the render immediately to get evrything back as we resize.
+ * and we set this to the window.onresize event to call this everytime we resize the browser size so as to get the proper lines.
+ * also, this need to call once on the start of the app as the by-default size of the canvas is (typically 300x150 pixels). so as to get the full size as per our need.
+ *
+ */
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -27,7 +38,17 @@ function resize() {
 window.onresize = resize;
 resize();
 
+/**
+ * @description
+ * this function toggle between between the opening and closing of the drop-down menu for both width-dropdown and color-palette.
+ *
+ * @param
+ * this takes the id the html element whose toggle is managed.
+ *
+ *
+ */
 function toggleMenu(id) {
+  // here id is the id of the element.
   const el = document.getElementById(id);
   const current = el.style.display;
   document.getElementById("width-dropdown").style.display = "none";
@@ -40,28 +61,54 @@ function toggleMenu(id) {
         : "block";
 }
 
+/**
+ * @description
+ * - this function is the main heart of the whole project, it render the line on the screen as it gets changed, everytime. Also, the canvas is cleared everytime before we draw the new line from top-left to the bottom-right.
+ * - for each line, we are taking the co-ordinates of the start, elbow points or the between and end points of the each line and then pass through it he getPath() method.
+ * - this method makes the points object array and convert them to the svg path (https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch/Paths) ie. M, L, C, etc. form.
+ * and then new Path2D() method draw it on the canvas when we pass the svg path.
+ *
+ * section 1:
+ * In this, if the line is active line which we confirm by the id given to the line object or it is hovered, then, we will add the outer line of the purple color to it.
+ *
+ * section 2:
+ * In this, we have setted the line color, line's width and line end shape. then, we will draw this.
+ *
+ * section 3:
+ * - if the line is the activeId (we maintin it global),
+ * then we create the imaginary boundarybox of the line using its properties.
+ * - then we will draw move, locked or unlocked and roatate icon based on that, this is done by drawIcon() method.
+ *
+ * - Next we will draw the circles at the end with drawIcon() method.
+ * - Now, for the every elbow of the line, we will draw the circle with white bg, red text and X symbol between with a radius of the 8.
+ */
+
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   lines.forEach((line) => {
     const pts = [line.start, ...line.elbows, line.end];
     const path = new Path2D(getPath(pts));
 
+    // section 1:
     if (line.id === activeId || line.id === hoveredLineId) {
       ctx.strokeStyle = "#c031ff";
-      ctx.lineWidth = line.width + 4;
+      ctx.lineWidth = line.width + 2;
       ctx.stroke(path);
     }
 
+    // section 2:
     ctx.strokeStyle = line.color;
     ctx.lineWidth = line.width;
-    ctx.lineCap = ctx.lineJoin = "round";
+    ctx.lineCap = ctx.lineJoin = "straight";
     ctx.stroke(path);
 
+    // section 3;
     if (line.id === activeId) {
       const box = getBoundingBox(line);
       drawIcon(box.midX - 40, box.minY - 45, "move");
-      drawIcon(box.midX, box.minY - 45, line.locked ? "locked" : "unlock");
       drawIcon(box.midX + 40, box.minY - 45, "rotate");
+      drawIcon(box.midX, box.minY - 45, line.locked ? "locked" : "unlock");
 
       // Render Handles and Delete Buttons
       [line.start, line.end].forEach((p) => {
@@ -85,16 +132,34 @@ function render() {
   });
 }
 
+/**
+ * @description
+ * this method draws the handle means end points (circular one). all the points endpoints and elbow points draws as same.
+ * the bg is white and outer arc of the circle is black with thickness 1.5.
+ * @params
+ * this takes two params x and y which shows the position where the handle to be drawn.
+ */
+
 function drawHandle(x, y) {
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#000";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(x, y, 6, 0, Math.PI * 2);
+  ctx.arc(x, y, 8, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 }
 
+/**
+ *
+ * @description
+ * - this draws the move, rotate and lock icon on the canvas.
+ * -  Also, this draws the box around the each icon.
+ * - we are restoring the canvas setting to last one after drawing these icons on the canvas as we have the single brush.
+ *
+ * @param
+ * - x and y are position where to draw and type is which shape to draw, move, rotate and lock.
+ */
 function drawIcon(x, y, type) {
   const size = 30; // Increased slightly for better padding
   ctx.save();
@@ -119,13 +184,24 @@ function drawIcon(x, y, type) {
         : type === "locked"
           ? "🔒"
           : "🔓";
-
-  // Drawing at (x, y) with 'middle' baseline puts the center of the text at y
-  // We add a tiny 1px tweak if specific glyphs look too high or low
   const yOffset = type === "move" ? 0 : 1;
   ctx.fillText(icon, x, y + yOffset);
   ctx.restore();
 }
+
+/**
+ *
+ * @description
+ * - this fxn, takes the line points object's array and convert them to the single Path String of the svg which containes the M, L, C commands to move the line.
+ * - the returned string is then passed to the new Path2D() method.
+ *
+ * @param
+ * - this takes the point object's array of the single line.
+ *
+ *
+ * @returns
+ * - the path svg string with which It draws the pathon the canvas.
+ */
 
 function getPath(pts) {
   if (pts.length < 2) return "";
@@ -144,6 +220,20 @@ function getPath(pts) {
   return d;
 }
 
+/**
+ *
+ * @description
+ * - this takes all the points of the line and find the max and min along the x axis and then find the mix point of that.
+ * - along y it find the min y value and return these as the object.
+ * - these values can be used to put the drawIcon method to get the position of the move, rotate and lock button over the line.
+ *
+ * @param
+ * - it takes the line object which has different set of the valeus such as the start, end and elbow points coordinates as the two value object.
+ *
+ * @return
+ * - it returns the object which has the middle X value of the line drawn to get the center of the line and min Y value to get the position just above the line.
+ */
+
 function getBoundingBox(line) {
   const all = [line.start, line.end, ...line.elbows];
   const minX = Math.min(...all.map((p) => p.x)),
@@ -153,6 +243,21 @@ function getBoundingBox(line) {
     midX: (minX + maxX) / 2,
   };
 }
+
+/**
+ *
+ * @description
+ * - here we are checking the line is at the point or not, for that we will take the cursor's current x and y and then check the lines from the array's last line to the initial incase of multiple lines one over the other and find which one is selected.
+ *  - then with method new Path2D we will generate the svg path string and try to find the coordinate is on the line or not and if yes then return the line object itself.
+ * - also, we will increase the line width by 20 px.
+ *
+ * @param
+ * - coordinate position x and y which we will from the mouse coordinates.
+ *
+ *
+ * @returns
+ * - if the point is over the line returns the line otherwise null.
+ */
 
 function getLineAt(x, y) {
   // We iterate backwards to select the line "on top" first
@@ -166,6 +271,15 @@ function getLineAt(x, y) {
   }
   return null;
 }
+
+/**
+ *
+ * @description
+ *
+ *
+ * @param
+ * @returns
+ */
 
 canvas.onmousedown = (e) => {
   const x = e.clientX,
@@ -315,6 +429,18 @@ window.onmousemove = (e) => {
 
 window.onmouseup = () => (dragging = null);
 
+/**
+ * @description
+ * - this function handles the navbar with current active line.
+ * - if the line is active only then we will show the navbar and then we will check with value of the locked state, color from the active line object.
+ * - and based upon that we will render the canvas again with the new set of the options settings.
+ * - this is the first render call itself when the newline is added.
+ *
+ *
+ * @param
+ * - takes the id of the line to get the current state of that.
+ */
+
 function setActive(id) {
   activeId = id ? Number(id) : null;
   const nav = document.getElementById("navbar");
@@ -328,8 +454,21 @@ function setActive(id) {
   } else {
     nav.style.display = "none";
   }
-  render();
+  render(); // first render call.
 }
+
+/**
+ * @description
+ * - this method handles the updating the line color and line width based upon the c and w value.
+ *
+ * - these are called when ever there is event of change in the color or linewidth.
+ *
+ * @param
+ * - c , contiains the current value of c while the w, contains the current value of the linewidth.
+ * - after the change has been made the line is render again so as to get the color or width change.
+ *
+ *
+ */
 
 function updateActiveLine(c, w) {
   const l = lines.find((l) => l.id === activeId);
@@ -341,6 +480,13 @@ function updateActiveLine(c, w) {
   if (w) l.width = w;
   render();
 }
+
+/**
+ * @description
+ * - handles the locked value of the line object toggled as we click the button either on the line's toolbar or over the line menu.
+ * - here we call the setActive(id) with id again so as to call the render() and change the UI as the lock state change. Also, this will change the line's object value.
+ *
+ */
 
 function toggleLock() {
   const l = lines.find((l) => l.id === activeId);
@@ -355,30 +501,61 @@ function deleteActiveLine() {
   setActive(null);
 }
 
+/**
+ *
+ * @description
+ * - this method creates the new line based upon the type of the line selected and clicked from the options.
+ * - it will create the new line object and push it to the lines array.
+ * - the id id generated based upon the current time.
+ * - after that it will render the canvas again so as to get the new line added, which will be called in the setActive line.
+ *
+ *
+ * @param
+ * - the type here is the string value which can be straight(default), step or curved.
+ */
+
 function addNewLine(type) {
   const id = Date.now();
   let newLine = {
     id,
     color: "#3B82F6",
     width: 6,
-    start: { x: 200, y: 300 },
-    end: { x: 500, y: 300 },
+    start: { x: 400, y: 300 },
+    end: { x: 700, y: 300 },
     elbows: [],
     locked: false,
   };
   if (type === "step") {
+    newLine.start = { x: 200, y: 300 };
+    newLine.end = { x: 500, y: 300 };
     newLine.elbows = [
       { x: 350, y: 300 },
       { x: 350, y: 450 },
     ];
     newLine.end = { x: 500, y: 450 };
   } else if (type === "curved") {
+    newLine.start = { x: 200, y: 250 };
+    newLine.end = { x: 500, y: 250 };
     newLine.elbows = [{ x: 350, y: 200 }];
   }
   lines.push(newLine);
   setActive(id);
 }
 
+
+
+/**
+ * @description
+ * - we will take event double click on the canvas and find the x and y of the cusrsor.
+ * - then find the active line and get the all the points (x, y coordinate object) and then get the svg path by the getPath() method.
+ * - then we will pass the svg path to the Path which can be used to stroke or check that the user cursor is on the line or not.
+ * - we add the linewidth by 20 so as to get the click over the few distance away from the line as well.
+ * - then we try to find the min distance between the current cursor of the mouse and nearest part of the line (which is called the segment, this segment is bounded by the two points) from all points and then find the best segment and then at the line segment at a particular x and y we add the point.
+ * - after adding we will render the whole canvas again.
+ * 
+ * @param
+ * - the event e which is suppose to be the double click event on the canvas.
+ */
 canvas.ondblclick = (e) => {
   // Use offsetX/Y for accurate canvas coordinates
   const x = e.offsetX;
@@ -416,6 +593,26 @@ canvas.ondblclick = (e) => {
   }
 };
 
+
+/**
+ * Finds the best segment over which point is to be added.
+ * Takes the current user coordinates x and y, and two end points of the current segment.
+ * Then tries to find the distance with the endpoints and current cursor position.
+ * @param {number} x - The current user's x-coordinate
+ * @param {number} y - The current user's y-coordinate
+ * @param {{x:number, y:number}} a - The start point of the segment
+ * @param {{x:number, y:number}} b - The end point of the segment
+ * @returns {number} The distance from the current user coordinates to the line segment
+ */
+function pToSegDist(x, y, a, b) {
+  const l2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+  if (l2 === 0) return Math.hypot(x - a.x, y - a.y);
+  const t = Math.max(
+    0,
+    Math.min(1, ((x - a.x) * (b.x - a.x) + (y - a.y) * (b.y - a.y)) / l2),
+  );
+  return Math.hypot(x - (a.x + t * (b.x - a.x)), y - (a.y + t * (b.y - a.y)));
+}
 function pToSegDist(x, y, a, b) {
   const l2 = (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
   if (l2 === 0) return Math.hypot(x - a.x, y - a.y);
@@ -447,5 +644,3 @@ function generateSvgBase64() {
   // 4. Return the Data URI
   return `data:image/svg+xml;base64,${base64}`;
 }
-
-
