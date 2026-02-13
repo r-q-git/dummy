@@ -542,8 +542,6 @@ function addNewLine(type) {
   setActive(id);
 }
 
-
-
 /**
  * @description
  * - we will take event double click on the canvas and find the x and y of the cusrsor.
@@ -552,7 +550,7 @@ function addNewLine(type) {
  * - we add the linewidth by 20 so as to get the click over the few distance away from the line as well.
  * - then we try to find the min distance between the current cursor of the mouse and nearest part of the line (which is called the segment, this segment is bounded by the two points) from all points and then find the best segment and then at the line segment at a particular x and y we add the point.
  * - after adding we will render the whole canvas again.
- * 
+ *
  * @param
  * - the event e which is suppose to be the double click event on the canvas.
  */
@@ -592,7 +590,6 @@ canvas.ondblclick = (e) => {
     }
   }
 };
-
 
 /**
  * Finds the best segment over which point is to be added.
@@ -638,9 +635,21 @@ function generateSvgBase64() {
   // 3. Encode to Base64
   // We use encodeURIComponent + unescape to ensure we don't break on non-ASCII characters
   const base64 = window.btoa(unescape(encodeURIComponent(svgString)));
+  const dataUri = `data:image/svg+xml;base64,${base64}`;
 
+  // 4. Send to Parent (The simplified IframeMessageService logic)
+  if (typeof window !== "undefined" && window.parent) {
+    window.parent.postMessage(
+      {
+        type: "ADD_OBJECT", // This matches IframeMessageType.ADD_OBJECT
+        payload: {
+          dataString: dataUri,
+          type: "stickerbox",
+          metaData: {},
+        },
+      },
+      "*",
+    ); // Change "*" to your specific domain in production for security
+  }
   console.log(`data:image/svg+xml;base64,${base64}`);
-
-  // 4. Return the Data URI
-  return `data:image/svg+xml;base64,${base64}`;
 }
